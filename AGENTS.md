@@ -24,17 +24,14 @@ Module paths are colon-separated and mirror the directory layout: `:src:en:mirur
 
 ### Tests
 
-`core/src/test/kotlin/keiyoushi/utils/` holds the repo's only unit tests (`NextJsTest`, `UrlUtilsTest`).
-Extensions have none – they are verified by compiling and running against the live site
-(`CONTRIBUTING.md#submitting-the-changes` ~ `1369`).
+The repo's only unit tests are in `core/src/test/kotlin/keiyoushi/utils/`, `lib/unpacker/test/kotlin/`
+and `lib/megaextractor/test/`. Extensions have none – they are verified by compiling and running
+against the live site (`CONTRIBUTING.md#submitting-the-changes` ~ `1369`).
 
 ```bash
+./gradlew --continue :core:testDebugUnitTest :lib:unpacker:testDebugUnitTest :lib:megaextractor:testDebugUnitTest
 ./gradlew :core:testDebugUnitTest --tests 'keiyoushi.utils.UrlUtilsTest'
 ```
-
-Known-broken: `:core:compileDebugUnitTestKotlin` fails – the tests import `kotlin.test.*` but
-`core/build.gradle.kts` only declares `testImplementation(libs.junit)`. Adding a `kotlin-test`
-dependency fixes it; until then the test task cannot run.
 
 ### Loading a subset of modules
 
@@ -86,6 +83,9 @@ See `CONTRIBUTING.md` for full rules. Critical for agents:
   `by lazy` keeps serving the stale client. See `lib-multisrc/anikototheme/.../AnikotoTheme.kt`.
 - Do not eagerly initialize `client` in a theme base class: the initializer runs before subclass
   constructors, so an overridden `open val rateLimit` reads `0`.
+- Do not create `android.*` objects (e.g. `LruCache`) in a source's constructor or property
+  initializers – use `by lazy`. The repo publisher instantiates sources on a plain JVM where they
+  throw `Stub!`, which blocks the publish for every extension. See `CONTRIBUTING.md#misc-notes`.
 
 ## Versioning – bump once per PR, theme bump propagates
 
